@@ -15,8 +15,9 @@ import {
 } from "three";
 import { useTexture2DArray } from "./utils/useTexture2DArray";
 import { makeMap } from "./utils/makeMap";
-
-import { map } from "./store/map";
+import useStore from "./store";
+import { Edges } from "@react-three/drei";
+import { useControls } from "leva";
 
 const tiles: Record<string, number> = {
   FLOOR: 12,
@@ -26,10 +27,10 @@ const tiles: Record<string, number> = {
 /**
  * The user sending the ws message
  */
-const user = `${Math.floor(Math.random() * 4096)}`;
-const ws = new WebSocket(
-  `wss://${process.env.CODESANDBOX_HOST}`.replace("$PORT", "4000")
-);
+// const user = `${Math.floor(Math.random() * 4096)}`;
+// const ws = new WebSocket(
+//   `wss://${process.env.CODESANDBOX_HOST}`.replace("$PORT", "4000")
+// );
 
 const TileMap = React.forwardRef<
   Mesh,
@@ -39,9 +40,10 @@ const TileMap = React.forwardRef<
     onPointerDown: (e: any) => void;
   }
 >(({ type = tiles.FLOOR, texture, ...props }, forwardedRef) => {
+  const map = useStore((s) => s.map);
   const geometry = React.useMemo(() => {
     return makeMap(map);
-  }, []);
+  }, [map]);
 
   return (
     <>
@@ -79,21 +81,21 @@ const MyScene: React.FC<{ paintingTile: number }> = ({ paintingTile }) => {
     attribute.needsUpdate = true;
   }, []);
 
-  React.useEffect(() => {
-    const handleMessage = (e: { data: string }) => {
-      const { paintingTile, face, from } = JSON.parse(e.data);
+  // React.useEffect(() => {
+  //   const handleMessage = (e: { data: string }) => {
+  //     const { paintingTile, face, from } = JSON.parse(e.data);
 
-      if (from !== user) {
-        applyChange(paintingTile, face);
-      }
-    };
+  //     if (from !== user) {
+  //       applyChange(paintingTile, face);
+  //     }
+  //   };
 
-    ws.addEventListener("message", handleMessage);
+  //   ws.addEventListener("message", handleMessage);
 
-    return () => {
-      ws.removeEventListener("message", handleMessage);
-    };
-  });
+  //   return () => {
+  //     ws.removeEventListener("message", handleMessage);
+  //   };
+  // });
 
   return (
     <>
@@ -105,17 +107,17 @@ const MyScene: React.FC<{ paintingTile: number }> = ({ paintingTile }) => {
 
             applyChange(paintingTile, face);
 
-            ws.send(
-              JSON.stringify(
-                {
-                  from: user,
-                  paintingTile,
-                  face,
-                },
-                null,
-                "  "
-              )
-            );
+            // ws.send(
+            //   JSON.stringify(
+            //     {
+            //       from: user,
+            //       paintingTile,
+            //       face,
+            //     },
+            //     null,
+            //     "  "
+            //   )
+            // );
           }
         }}
         texture={texture}
@@ -124,8 +126,60 @@ const MyScene: React.FC<{ paintingTile: number }> = ({ paintingTile }) => {
   );
 };
 
+const TILESET = [17, 8];
+
+const VoxelEditor = () => {
+  const mapSize = useStore((s) => s.map.length);
+  const toggleTileAt = useStore((s) => s.toggleTileAt);
+  const [hovered, setHovered] = React.useState(null);
+
+  return (
+    <group
+      position-x={-Math.sqrt(mapSize) / 2}
+      position-z={-Math.sqrt(mapSize) / 2}
+      onPointerOut={() => setHovered(false)}
+    >
+      {[...Array(mapSize)].map((_, i) => (
+        <mesh
+          position-x={(i % Math.sqrt(mapSize)) + 0.5}
+          position-y={0.5}
+          position-z={Math.floor(i / Math.sqrt(mapSize)) + 0.5}
+          scale={1.01}
+          visible={hovered === i}
+          onPointerEnter={(e) => {
+            e.stopPropagation();
+            setHovered(i);
+          }}
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            toggleTileAt(i);
+          }}
+  
+        >
+          <Edges
+            color="white"
+            material-depthTest={false}
+            material-depthWrite={false}
+            renderOrder={100}
+          />
+
+          <meshBasicMaterial visible={false} />
+          <boxGeometry />
+        </mesh>
+      ))}
+    </group>
+  );
+};
+
 function App() {
   const [selected, setSelected] = React.useState(39);
+
+  const { editorMode } = useControls({
+    editorMode: {
+      value: "voxel",
+      options: ["voxel", "tiles"],
+    },
+  });
 
   return (
     <>
@@ -136,6 +190,7 @@ function App() {
           <React.Suspense fallback={null}>
             <color attach="background" args={["#17141F"]} />
             <MyScene paintingTile={selected} />
+            {editorMode === "voxel" && <VoxelEditor />}
           </React.Suspense>
           <axesHelper />
 
@@ -147,21 +202,18 @@ function App() {
           <div className="tilemap">
             <img src="./map.png" />
 
-            {Array.from({ length: 17 * 8 }).map((_, i) => {
-              const columns = 17;
+            {Array.from({ length: TILESET[0] * TILESET[1] }).map((_, i) => {
+              const columns = TILESET[0];
 
               const x = i % columns;
               const y = Math.floor(i / columns);
-
-              const row = y;
-              const col = x;
 
               return (
                 <div
                   onClick={() => {
                     setSelected(i + 1);
                   }}
-                  className={selected === i + 1 && "selected"}
+                  className={selected === i + 1 ? "selected" : ""}
                   style={{
                     width: 16,
                     height: 16,

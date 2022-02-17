@@ -1,6 +1,6 @@
 import create, { State, StateCreator } from "zustand";
 import produce, { Draft } from "immer";
-import { WebGLRenderTarget } from "three";
+import { map } from "./map";
 
 // Immer V9
 const immer =
@@ -11,13 +11,19 @@ const immer =
     config((fn) => set(produce<T>(fn)), get, api);
 
 type MyState = {
-  fbos: Record<string, WebGLRenderTarget>;
   map: number[];
+  editorMode: "voxel" | "tiles";
 };
 
 const useStore = create<MyState>(
-  immer((set, get) => ({
-    fbos: {},
+  immer((set) => ({
+    map: map,
+    editorMode: 'voxel',
+    toggleTileAt: (index: number) => {
+      set((state) => {
+        state.map[index] = state.map[index] === 1 ? 0 : 1;
+      })
+    }
   }))
 );
 

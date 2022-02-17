@@ -4,11 +4,10 @@ import { OrbitControls as ImplOrbitControls } from "@react-three/drei";
 import useStore from "../store";
 
 export function OrbitControls() {
-  const enabled = useStore((state) => !state.transforming);
 
   return (
     <ImplOrbitControls
-      enabled={enabled}
+      enabled={true}
       ref={(ref) =>
         useStore.setState({
           orbitControls: ref,

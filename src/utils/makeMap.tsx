@@ -1,6 +1,6 @@
 import * as BufferGeometryUtils from "three/examples/jsm/utils/BufferGeometryUtils";
 import { makePlane } from "./makePlane";
-import { BufferGeometry, Quaternion } from "three";
+import { BufferGeometry, Quaternion, Vector3 } from "three";
 
 export function getIndexFrom2D(coords: number[], size: number[]) {
   return coords[0] + size[0] * coords[1];
@@ -63,10 +63,14 @@ export const makeMap = (map: number[]) => {
     /**
      * Pick randomly for floor tiles
      */
-    let bottomTile = rand(53, 54, 22, 23, 39, 39, 39);
-    let wallTile = rand(36, 36, 37);
+    let bottomTile = 39;
+    let wallTile = 36;
 
-    let bottomTileRotation = new Quaternion().identity();
+    let rotation = 0;
+
+    let bottomTileRotation = new Quaternion()
+      .identity()
+      .setFromAxisAngle(new Vector3(0, 1, 0), rotation);
 
     const tile = [
       px && makePlane("px", wallTile),

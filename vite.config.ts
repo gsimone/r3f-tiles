@@ -5,10 +5,9 @@ import EnvironmentPlugin from "vite-plugin-environment";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [reactRefresh(), EnvironmentPlugin(["CODESANDBOX_HOST"])],
-  server: {
-    hmr: {
-      port: 443,
-    },
-  },
+  plugins: [
+    reactRefresh(), 
+    // EnvironmentPlugin(["CODESANDBOX_HOST"])
+  ],
+ 
 });
