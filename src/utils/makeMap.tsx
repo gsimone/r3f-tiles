@@ -1,7 +1,6 @@
 import * as BufferGeometryUtils from "three/examples/jsm/utils/BufferGeometryUtils";
-import { GeometryUtils } from "three-stdlib";
 import { makePlane } from "./makePlane";
-import { BufferGeometry, Euler, Quaternion } from "three";
+import { BufferGeometry, Quaternion } from "three";
 
 export function getIndexFrom2D(coords: number[], size: number[]) {
   return coords[0] + size[0] * coords[1];
@@ -14,7 +13,7 @@ export function get2DFromIndex(index: number, columns: number) {
   return [x, y];
 }
 
-function getTile(map, coords: number[], [map_w, map_h]: number[]) {
+function getTile(map: number[], coords: number[], [map_w, map_h]: number[]) {
   const [col, row] = coords;
 
   if (col >= map_w || col < 0) return 0;
@@ -55,16 +54,19 @@ export const makeMap = (map: number[]) => {
 
     let topTile = 0;
 
-    const rand = (...arr) => {
+    const rand = (...arr: number[]) => {
       const l = arr.length;
 
       return arr[Math.floor(Math.random() * l)];
     };
 
+    /**
+     * Pick randomly for floor tiles
+     */
     let bottomTile = rand(53, 54, 22, 23, 39, 39, 39);
-    let bottomTileRotation = new Quaternion().identity();
+    let wallTile = rand(36, 36, 37);
 
-    let wallTile = [36, 37, 36][Math.floor(Math.random() * 3)];
+    let bottomTileRotation = new Quaternion().identity();
 
     const tile = [
       px && makePlane("px", wallTile),
