@@ -4,15 +4,15 @@
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
 
@@ -21,44 +21,42 @@ code {
   height: 100vh;
 }
 
-
 .tilemap {
   position: fixed;
   top: 0;
   z-index: 100;
   transform-origin: top left;
-  transition: all .3s ease;
-
+  transition: all 0.3s ease;
 }
 
-  .tilemap:hover {
-    transform: scale(2.5);
-  }
+.tilemap:hover {
+  transform: scale(2);
+}
 
-  .tilemap img {
-    margin: 0;
-    image-rendering: pixelated;
-  }
+.tilemap img {
+  margin: 0;
+  image-rendering: pixelated;
+}
 
-  .tilemap div {
-    position: absolute;
-    inset: 0;
-    font-size: 10px;
-    font-family: monospace;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: all .1s ease;
-  }
+.tilemap div {
+  position: absolute;
+  inset: 0;
+  font-size: 10px;
+  font-family: monospace;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.1s ease;
+}
 
-    .tilemap div:hover {
-      opacity: 1;
-      outline: 2px solid white;
-    }
+.tilemap div:hover {
+  opacity: 1;
+  outline: 2px solid white;
+}
 
-    .tilemap div.selected {
-      opacity: 1;
-      outline: 2px solid #0EEC82;
-    }
+.tilemap div.selected {
+  opacity: 1;
+  outline: 2px solid #0eec82;
+}

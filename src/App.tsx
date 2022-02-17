@@ -6,89 +6,127 @@ import { Toaster } from "react-hot-toast";
 import { OrbitControls } from "./utils";
 
 import ShaderMaterial from "./ShaderMaterial";
-import { ClampToEdgeWrapping, DataTexture2DArray, NearestFilter } from "three";
+import {
+  BufferAttribute,
+  ClampToEdgeWrapping,
+  DataTexture2DArray,
+  Mesh,
+  NearestFilter,
+} from "three";
 import { useTexture2DArray } from "./utils/useTexture2DArray";
 import { makeMap } from "./utils/makeMap";
-import useStore from "./store";
 
 import { map } from "./store/map";
-
-const transformUv = (x: Float32Array, size: number[], tileCoords: number[]) => {
-  for (let i = 0; i < x.length; i += 2) {
-    const u = x[i] / size[0] + (1 / size[0]) * tileCoords[0];
-    const v = x[i + 1] / size[1] + (1 / size[1]) * tileCoords[1];
-
-    x.set([u, v], i);
-  }
-};
 
 const tiles: Record<string, number> = {
   FLOOR: 12,
   WALL: 7,
 };
 
-function TileMap({
-  type = tiles.FLOOR,
-  texture,
-  plane,
-  ...props
-}: {
-  type: number;
-  plane: "px" | "nx" | "py" | "ny" | "pz" | "nz";
-  texture: DataTexture2DArray;
-}) {
-  const [ref, setRef] = React.useState(null!);
+/**
+ * The user sending the ws message
+ */
+const user = `${Math.floor(Math.random() * 4096)}`;
+const ws = new WebSocket(
+  `wss://${process.env.CODESANDBOX_HOST}`.replace("$PORT", "4000")
+);
 
+const TileMap = React.forwardRef<
+  Mesh,
+  {
+    type: number;
+    texture: DataTexture2DArray;
+    onPointerDown: (e: any) => void;
+  }
+>(({ type = tiles.FLOOR, texture, ...props }, forwardedRef) => {
   const geometry = React.useMemo(() => {
     return makeMap(map);
   }, []);
 
   return (
     <>
-      <mesh geometry={geometry} {...props}>
+      <mesh ref={forwardedRef} geometry={geometry} {...props}>
         <ShaderMaterial uMap={texture} depth={tiles[type]} toneMapped={false} />
       </mesh>
     </>
   );
-}
+});
 
-function MyScene({paintingTile}) {
-  const texture = useTexture2DArray("./2darray.png");
+type Face = {
+  a: number;
+  b: number;
+  c: number;
+};
+
+const MyScene: React.FC<{ paintingTile: number }> = ({ paintingTile }) => {
+  const texture = useTexture2DArray("./2darray.png", 16, 16, 137);
   texture.minFilter = NearestFilter;
   texture.magFilter = NearestFilter;
 
   texture.wrapS = ClampToEdgeWrapping;
   texture.wrapT = ClampToEdgeWrapping;
 
+  const mesh = React.useRef<Mesh>(null!);
+
+  const applyChange = React.useCallback((paintingTile: number, face: Face) => {
+    const attribute = mesh.current.geometry.getAttribute(
+      "depth"
+    ) as BufferAttribute;
+    attribute.set([paintingTile], face.a);
+    attribute.set([paintingTile], face.b);
+    attribute.set([paintingTile], face.c);
+
+    attribute.needsUpdate = true;
+  }, []);
+
+  React.useEffect(() => {
+    const handleMessage = (e: { data: string }) => {
+      const { paintingTile, face, from } = JSON.parse(e.data);
+
+      if (from !== user) {
+        applyChange(paintingTile, face);
+      }
+    };
+
+    ws.addEventListener("message", handleMessage);
+
+    return () => {
+      ws.removeEventListener("message", handleMessage);
+    };
+  });
 
   return (
     <>
       <TileMap
+        ref={mesh}
         onPointerDown={(e) => {
           if (e.buttons === 1) {
+            const face = e.intersections[0].face;
 
-            const face = e.intersections[0].face
-            const mesh = e.intersections[0].object
-  
-            const attribute = mesh.geometry.getAttribute('depth')
-  
-            attribute.set([paintingTile], face.a)
-            attribute.set([paintingTile], face.b)
-            attribute.set([paintingTile], face.c)
-  
-            attribute.needsUpdate = true
+            applyChange(paintingTile, face);
+
+            ws.send(
+              JSON.stringify(
+                {
+                  from: user,
+                  paintingTile,
+                  face,
+                },
+                null,
+                "  "
+              )
+            );
           }
         }}
         texture={texture}
       />
     </>
   );
-}
+};
 
 function App() {
-  const [selected, setSelected] = React.useState(39)
+  const [selected, setSelected] = React.useState(39);
 
-  
   return (
     <>
       <div id="canvas">
@@ -100,6 +138,8 @@ function App() {
             <MyScene paintingTile={selected} />
           </React.Suspense>
           <axesHelper />
+
+          <OrbitControls />
         </Canvas>
 
         <div>
@@ -119,10 +159,9 @@ function App() {
               return (
                 <div
                   onClick={() => {
-                    console.log("col: %i; row: %i; i: %i", col, row, i + 1);
-                    setSelected(i+1)
+                    setSelected(i + 1);
                   }}
-                  className={selected === i+1 && "selected"}
+                  className={selected === i + 1 && "selected"}
                   style={{
                     width: 16,
                     height: 16,

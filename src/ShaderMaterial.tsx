@@ -10,7 +10,7 @@ const MyMaterial = shaderMaterial(
   {
     u_time: 0,
     uMap: null,
-		depth: 0,
+    depth: 0,
     uTileUv: new Vector2(0, 0),
   },
   /* glsl */
@@ -50,11 +50,11 @@ const MyMaterial = shaderMaterial(
 		outColor = vec4( color.rgb, 1. );
 
 	}
-	`, (x) => {
-		x.glslVersion = GLSL3
-	}
+	`,
+  (x) => {
+    x.glslVersion = GLSL3;
+  }
 );
-
 
 extend({ MyMaterial });
 
