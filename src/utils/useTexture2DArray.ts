@@ -13,19 +13,22 @@ function getImageData(image: HTMLImageElement) {
   return context.getImageData(0, 0, image.width, image.height);
 }
 
-export const useTexture2DArray = (path: string) => {
+/**
+ * Loads a texture and converts it to a texture2DArray texture
+ */
+export const useTexture2DArray = (
+  path: string,
+  width: number,
+  height: number,
+  count: number
+) => {
   const texture = useTexture<string>(path);
 
   return React.useMemo(() => {
-    console.log(texture.image.width, texture.image.height)
     const imageData = getImageData(texture.image as HTMLImageElement);
     const array = new Uint8Array(imageData.data);
 
-    console.log(array.length, imageData.data.length)
-
-    const dataTexture = new DataTexture2DArray(array, 16, 16, 137);
-    dataTexture.generateMipmaps = true;
-
+    const dataTexture = new DataTexture2DArray(array, width, height, count);
     dataTexture.needsUpdate = true;
 
     texture.dispose();

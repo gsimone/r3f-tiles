@@ -1,3 +1,3 @@
-import useStore from './store'
+import useStore from "./store";
 
-export default useStore
+export default useStore;

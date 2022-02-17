@@ -28,7 +28,7 @@ export const makePlane = (plane, tile) => {
     g.applyQuaternion(q);
     g.translate(0, 1, 0);
   }
-  
+
   if (plane === "ny") {
     q.setFromEuler(new Euler(-hPI, 0, 0));
     g.applyQuaternion(q);

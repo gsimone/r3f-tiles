@@ -1,10 +1,4 @@
-import OrbitControls from './Controls'
-import TransformControls from './TransformControls'
-export * from './FBODebug'
-import FBOGUI from './FBOGUI'
+import OrbitControls from "./Controls";
+import TransformControls from "./TransformControls";
 
-export {
-  OrbitControls,
-  TransformControls,
-  FBOGUI
-}
+export { OrbitControls, TransformControls };

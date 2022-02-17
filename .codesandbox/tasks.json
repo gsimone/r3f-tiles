@@ -1,0 +1,26 @@
+{
+  "setupTasks": [
+    {
+      "name": "Installing Dependencies",
+      "command": "yarn && cd server && yarn"
+    }
+  ],
+  "portTasks": {
+    "3000": {
+      "name": "Application",
+      "command": "yarn dev",
+      "runAtStart": true
+    },
+    "4000": {
+      "name": "Fastify",
+      "command": "cd server && yarn dev",
+      "runAtStart": true
+    }
+  },
+  "tasks": {
+    "prettier": {
+      "name": "Run Prettier",
+      "command": "yarn prettier -w ."
+    }
+  }
+}

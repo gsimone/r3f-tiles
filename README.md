@@ -3,5 +3,5 @@
 ### Usage
 
 ```
-npx degit gsimone/vite-r3f  
+npx degit gsimone/vite-r3f
 ```
