@@ -11,19 +11,19 @@ const immer =
     config((fn) => set(produce<T>(fn)), get, api);
 
 type MyState = {
-  map: number[];
+  map: number[][];
   editorMode: "voxel" | "tiles";
 };
 
 const useStore = create<MyState>(
   immer((set) => ({
     map: map,
-    editorMode: 'voxel',
+    editorMode: "voxel",
     toggleTileAt: (index: number) => {
       set((state) => {
         state.map[index] = state.map[index] === 1 ? 0 : 1;
-      })
-    }
+      });
+    },
   }))
 );
 

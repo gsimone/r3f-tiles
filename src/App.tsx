@@ -40,10 +40,18 @@ const TileMap = React.forwardRef<
     onPointerDown: (e: any) => void;
   }
 >(({ type = tiles.FLOOR, texture, ...props }, forwardedRef) => {
+  const { debugExplode } = useControls({
+    debugExplode: {
+      min: 1,
+      max: 3,
+      step: 0.1,
+      value: 1,
+    },
+  });
   const map = useStore((s) => s.map);
   const geometry = React.useMemo(() => {
-    return makeMap(map);
-  }, [map]);
+    return makeMap(map, debugExplode);
+  }, [map, debugExplode]);
 
   return (
     <>
@@ -130,43 +138,45 @@ const TILESET = [17, 8];
 
 const VoxelEditor = () => {
   const mapSize = useStore((s) => s.map.length);
+  const layerSize = useStore((s) => s.map[0].length);
   const toggleTileAt = useStore((s) => s.toggleTileAt);
   const [hovered, setHovered] = React.useState(null);
 
   return (
     <group
-      position-x={-Math.sqrt(mapSize) / 2}
-      position-z={-Math.sqrt(mapSize) / 2}
+      position-x={-Math.sqrt(layerSize) / 2}
+      position-z={-Math.sqrt(layerSize) / 2}
       onPointerOut={() => setHovered(false)}
     >
-      {[...Array(mapSize)].map((_, i) => (
-        <mesh
-          position-x={(i % Math.sqrt(mapSize)) + 0.5}
-          position-y={0.5}
-          position-z={Math.floor(i / Math.sqrt(mapSize)) + 0.5}
-          scale={1.01}
-          visible={hovered === i}
-          onPointerEnter={(e) => {
-            e.stopPropagation();
-            setHovered(i);
-          }}
-          onPointerDown={(e) => {
-            e.stopPropagation();
-            toggleTileAt(i);
-          }}
-  
-        >
-          <Edges
-            color="white"
-            material-depthTest={false}
-            material-depthWrite={false}
-            renderOrder={100}
-          />
+      {[...Array(mapSize)].map((_, z) =>
+        [...Array(layerSize)].map((_, i) => (
+          <mesh
+            position-x={(i % Math.sqrt(layerSize)) + 0.5}
+            position-y={0.5 + (1 * z - 1)}
+            position-z={Math.floor(i / Math.sqrt(layerSize)) + 0.5}
+            scale={1.01}
+            visible={hovered === i}
+            onPointerEnter={(e) => {
+              e.stopPropagation();
+              setHovered(i);
+            }}
+            onPointerDown={(e) => {
+              e.stopPropagation();
+              toggleTileAt(i);
+            }}
+          >
+            <Edges
+              color="white"
+              material-depthTest={false}
+              material-depthWrite={false}
+              renderOrder={100}
+            />
 
-          <meshBasicMaterial visible={false} />
-          <boxGeometry />
-        </mesh>
-      ))}
+            <meshBasicMaterial visible={false} />
+            <boxGeometry />
+          </mesh>
+        ))
+      )}
     </group>
   );
 };
@@ -176,7 +186,7 @@ function App() {
 
   const { editorMode } = useControls({
     editorMode: {
-      value: "voxel",
+      value: "tiles",
       options: ["voxel", "tiles"],
     },
   });

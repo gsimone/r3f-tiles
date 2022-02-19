@@ -4,7 +4,6 @@ import { OrbitControls as ImplOrbitControls } from "@react-three/drei";
 import useStore from "../store";
 
 export function OrbitControls() {
-
   return (
     <ImplOrbitControls
       enabled={true}

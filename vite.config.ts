@@ -6,8 +6,7 @@ import EnvironmentPlugin from "vite-plugin-environment";
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    reactRefresh(), 
+    reactRefresh(),
     // EnvironmentPlugin(["CODESANDBOX_HOST"])
   ],
- 
 });

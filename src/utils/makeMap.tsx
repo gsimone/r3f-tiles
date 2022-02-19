@@ -24,78 +24,96 @@ function getTile(map: number[], coords: number[], [map_w, map_h]: number[]) {
   return map[index];
 }
 
-export const makeMap = (map: number[]) => {
-  const map_w = Math.sqrt(map.length);
-  const map_h = Math.sqrt(map.length);
-  const mapSize = [map_w, map_h];
-
+export const makeMap = (map: number[][], DEBUG_EXPLODE = 1) => {
   const toMerge = [];
+  const map_w = Math.sqrt(map[0].length);
+  const map_h = Math.sqrt(map[0].length);
+
+  const numberOfLayers = map.length;
+
   const t0 = performance.now();
-  for (let i = 0; i < map.length; i++) {
-    const row = Math.floor(i / map_w);
-    const col = i % map_h;
+  for (let z = 0; z < map.length; z++) {
+    const layer = map[z];
 
-    const type = map[i];
+    const mapSize = [map_w, map_h];
 
-    const north = getTile(map, [col, row + 1], mapSize);
-    const south = getTile(map, [col, row - 1], mapSize);
+    for (let i = 0; i < layer.length; i++) {
+      const row = Math.floor(i / map_w);
+      const col = i % map_h;
 
-    const east = getTile(map, [col + 1, row], mapSize);
-    const west = getTile(map, [col - 1, row], mapSize);
+      const type = layer[i];
 
-    const px = type && !east;
-    const nx = type && !west;
+      const up =
+        z + 1 < numberOfLayers
+          ? map[z + 1][getIndexFrom2D([col, row], [map_w, map_h])]
+          : 0;
+      const down =
+        z - 1 >= 0 ? map[z - 1][getIndexFrom2D([col, row], [map_w, map_h])] : 0;
 
-    const py = type;
-    const ny = !type;
+      const north = getTile(layer, [col, row + 1], mapSize);
+      const south = getTile(layer, [col, row - 1], mapSize);
 
-    const pz = type && !north;
-    const nz = type && !south;
+      const east = getTile(layer, [col + 1, row], mapSize);
+      const west = getTile(layer, [col - 1, row], mapSize);
 
-    let topTile = 0;
+      const px = type && !east;
+      const nx = type && !west;
 
-    const rand = (...arr: number[]) => {
-      const l = arr.length;
+      const py = type && up === 0;
+      const ny = type && down === 0;
 
-      return arr[Math.floor(Math.random() * l)];
-    };
+      const pz = type && !north;
+      const nz = type && !south;
 
-    /**
-     * Pick randomly for floor tiles
-     */
-    let bottomTile = 39;
-    let wallTile = 36;
+      const rand = (...arr: number[]) => {
+        const l = arr.length;
 
-    let rotation = 0;
+        return arr[Math.floor(Math.random() * l)];
+      };
 
-    let bottomTileRotation = new Quaternion()
-      .identity()
-      .setFromAxisAngle(new Vector3(0, 1, 0), rotation);
+      /**
+       * Pick randomly for floor tiles
+       */
+      let bottomTile = 39;
+      let wallTile = 36;
+      let topTile = 0;
 
-    const tile = [
-      px && makePlane("px", wallTile),
-      nx && makePlane("nx", wallTile),
+      let bottomTileRotation = new Quaternion()
+        .identity()
+        .setFromAxisAngle(new Vector3(0, 1, 0), 0);
 
-      // TOP
-      py && makePlane("py", topTile),
-      ny && makePlane("ny", bottomTile).applyQuaternion(bottomTileRotation),
+      const tile = [
+        px && makePlane("px", wallTile),
+        nx && makePlane("nx", wallTile),
 
-      pz && makePlane("pz", wallTile),
-      nz && makePlane("nz", wallTile),
-    ]
-      .filter((x) => x)
-      .map((g: BufferGeometry) => {
-        g.translate(col, 0, row);
-        return g;
-      });
+        // TOP
+        py && makePlane("py", z === 0 ? bottomTile : topTile),
+        ny && makePlane("ny", bottomTile).applyQuaternion(bottomTileRotation),
 
-    toMerge.push(...tile);
+        pz && makePlane("pz", wallTile),
+        nz && makePlane("nz", wallTile),
+      ]
+        .filter((x) => x)
+        .map((g: BufferGeometry) => {
+          g.translate(
+            col * DEBUG_EXPLODE,
+            z * DEBUG_EXPLODE,
+            row * DEBUG_EXPLODE
+          );
+          return g;
+        });
+
+      toMerge.push(...tile);
+    }
   }
+  console.log("[map] generated in %i ms", performance.now() - t0);
 
   const merged = BufferGeometryUtils.mergeBufferGeometries(toMerge);
-  merged.translate(-map_w / 2 + 0.5, 0, -map_h / 2 + 0.5);
-
-  console.log("[map] generated in %i ms", performance.now() - t0);
+  merged.translate(
+    (-map_w / 2 + 0.5) * DEBUG_EXPLODE,
+    (-numberOfLayers / 2 + 0.5) * DEBUG_EXPLODE,
+    (-map_h / 2 + 0.5) * DEBUG_EXPLODE
+  );
 
   return merged;
 };

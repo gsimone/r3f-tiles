@@ -2,12 +2,12 @@ import { shaderMaterial } from "@react-three/drei";
 import { extend, useFrame } from "@react-three/fiber";
 import { useControls } from "leva";
 import * as React from "react";
-import { GLSL3, Material, Vector2 } from "three";
+import { DoubleSide, GLSL3, Material, Vector2 } from "three";
 import isValidRef from "./utils/isValidRef";
 
 import useMaterialDebug from "./utils/useMaterialDebug";
 
-const glsl = x => `${x}`
+const glsl = (x) => `${x}`;
 
 const MyMaterial = shaderMaterial(
   {
@@ -15,7 +15,7 @@ const MyMaterial = shaderMaterial(
     uMap: null,
     depth: 0,
     uTileUv: new Vector2(0, 0),
-		uDebugUv: 0,
+    uDebugUv: 0,
   },
   glsl`
 	in int depth;
@@ -87,14 +87,14 @@ extend({ MyMaterial });
 function MaterialWrapper(props) {
   useMaterialDebug(MyMaterial);
 
-	const controls = useControls({
-		uDebugUv: {
-			value: 0,
-			min: 0,
-			max: 1,
-			step: 0.5,
-		}
-	})
+  const controls = useControls({
+    uDebugUv: {
+      value: 0,
+      min: 0,
+      max: 1,
+      step: 0.5,
+    },
+  });
 
   const materialRef = React.useRef<typeof Material>(null!);
 
@@ -104,7 +104,15 @@ function MaterialWrapper(props) {
     }
   });
 
-  return <myMaterial {...props} {...controls} ref={materialRef} transparent />;
+  return (
+    <myMaterial
+      {...props}
+      {...controls}
+      ref={materialRef}
+      side={DoubleSide}
+      transparent
+    />
+  );
 }
 
 export default MaterialWrapper;
